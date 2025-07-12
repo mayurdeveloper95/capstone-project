@@ -1,212 +1,287 @@
-import React, { useState } from 'react';
+import { useState, useReducer, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import BookingForm from './BookingForm';
+
+// Reducer function to handle available times state
+const availableTimesReducer = (state, action) => {
+    switch (action.type) {
+        case 'INITIALIZE_TIMES':
+            return action.payload;
+        case 'UPDATE_TIMES':
+            return action.payload;
+        default:
+            return state;
+    }
+};
+
+// Initialize times function
+const initializeTimes = async () => {
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    
+    try {
+        if (typeof window.fetchAPI === 'function') {
+            return window.fetchAPI(todayStr);
+        }
+        return ['17:00', '18:00', '19:00', '20:00', '21:00', '22:00'];
+    } catch (error) {
+        console.log(error);
+        return ['17:00', '18:00', '19:00', '20:00', '21:00', '22:00'];
+    }
+};
+
+// Update times function
+const updateTimes = async (date) => {
+    try {
+        if (typeof window.fetchAPI === 'function') {
+            return window.fetchAPI(date);
+        }
+        const dayOfWeek = new Date(date).getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+            return [
+                '10:00', '11:00', '12:00', '13:00', '14:00', '15:00',
+                '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
+            ];
+        } else {
+            return ['17:00', '18:00', '19:00', '20:00', '21:00', '22:00'];
+        }
+    } catch (error) {
+        console.log(error);
+        const dayOfWeek = new Date(date).getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+            return [
+                '10:00', '11:00', '12:00', '13:00', '14:00', '15:00',
+                '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
+            ];
+        } else {
+            return ['17:00', '18:00', '19:00', '20:00', '21:00', '22:00'];
+        }
+    }
+};
+
+// Submit form function
+const submitForm = async (formData) => {
+    try {
+        if (typeof window.submitAPI === 'function') {
+            const result = await window.submitAPI(formData);
+            return result;
+        }
+        console.log('Form submitted:', formData);
+        return true;
+    } catch (error) {
+        console.log('Error submitting form:', error);
+        return false;
+    }
+};
 
 const BookingPage = () => {
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        date: '',
-        time: '',
-        guests: '2',
-        occasion: '',
-        specialRequests: ''
-    });
+    const [availableTimes, dispatch] = useReducer(availableTimesReducer, []);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState(null);
+    const navigate = useNavigate();
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+    // Initialize available times on component mount
+    useEffect(() => {
+        const initializeAvailableTimes = async () => {
+            const times = await initializeTimes();
+            dispatch({ type: 'INITIALIZE_TIMES', payload: times });
+        };
+        initializeAvailableTimes();
+    }, []);
+
+    const handleFormSubmit = async (formData) => {
+        setIsSubmitting(true);
+        setSubmitError(null);
+        try {
+            const success = await submitForm(formData);
+            if (success) {
+                navigate('/confirmed');
+            } else {
+                setSubmitError('Failed to submit booking. Please try again.');
+                setIsSubmitting(false);
+            }
+        } catch (error) {
+            console.error('Error submitting booking:', error);
+            setSubmitError('An error occurred while submitting your booking. Please try again.');
+            setIsSubmitting(false);
+        }
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log('Booking submitted:', formData);
-        // Here you would typically send the data to your backend
-        alert('Reservation submitted successfully!');
-    };
+
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
-            <div className="container mx-auto px-4">
-                <div className="max-w-2xl mx-auto">
-                    <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">
-                        Make a Reservation
-                    </h1>
-                    
-                    <div className="bg-white rounded-lg shadow-lg p-8">
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* Personal Information */}
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div>
-                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Full Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="name"
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#f4ce14] focus:border-transparent"
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Email *
-                                    </label>
-                                    <input
-                                        type="email"
-                                        id="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#f4ce14] focus:border-transparent"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Phone Number
-                                </label>
-                                <input
-                                    type="tel"
-                                    id="phone"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#f4ce14] focus:border-transparent"
-                                />
-                            </div>
-
-                            {/* Reservation Details */}
-                            <div className="grid md:grid-cols-3 gap-6">
-                                <div>
-                                    <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Date *
-                                    </label>
-                                    <input
-                                        type="date"
-                                        id="date"
-                                        name="date"
-                                        value={formData.date}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#f4ce14] focus:border-transparent"
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Time *
-                                    </label>
-                                    <select
-                                        id="time"
-                                        name="time"
-                                        value={formData.time}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#f4ce14] focus:border-transparent"
-                                    >
-                                        <option value="">Select Time</option>
-                                        <option value="11:00">11:00 AM</option>
-                                        <option value="11:30">11:30 AM</option>
-                                        <option value="12:00">12:00 PM</option>
-                                        <option value="12:30">12:30 PM</option>
-                                        <option value="13:00">1:00 PM</option>
-                                        <option value="13:30">1:30 PM</option>
-                                        <option value="14:00">2:00 PM</option>
-                                        <option value="17:00">5:00 PM</option>
-                                        <option value="17:30">5:30 PM</option>
-                                        <option value="18:00">6:00 PM</option>
-                                        <option value="18:30">6:30 PM</option>
-                                        <option value="19:00">7:00 PM</option>
-                                        <option value="19:30">7:30 PM</option>
-                                        <option value="20:00">8:00 PM</option>
-                                        <option value="20:30">8:30 PM</option>
-                                        <option value="21:00">9:00 PM</option>
-                                    </select>
-                                </div>
-                                
-                                <div>
-                                    <label htmlFor="guests" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Number of Guests *
-                                    </label>
-                                    <select
-                                        id="guests"
-                                        name="guests"
-                                        value={formData.guests}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#f4ce14] focus:border-transparent"
-                                    >
-                                        <option value="1">1 Guest</option>
-                                        <option value="2">2 Guests</option>
-                                        <option value="3">3 Guests</option>
-                                        <option value="4">4 Guests</option>
-                                        <option value="5">5 Guests</option>
-                                        <option value="6">6 Guests</option>
-                                        <option value="7">7 Guests</option>
-                                        <option value="8">8 Guests</option>
-                                        <option value="9">9 Guests</option>
-                                        <option value="10">10+ Guests</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label htmlFor="occasion" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Occasion
-                                </label>
-                                <select
-                                    id="occasion"
-                                    name="occasion"
-                                    value={formData.occasion}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#f4ce14] focus:border-transparent"
-                                >
-                                    <option value="">Select Occasion</option>
-                                    <option value="birthday">Birthday</option>
-                                    <option value="anniversary">Anniversary</option>
-                                    <option value="business">Business Dinner</option>
-                                    <option value="date">Date Night</option>
-                                    <option value="family">Family Gathering</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Special Requests
-                                </label>
-                                <textarea
-                                    id="specialRequests"
-                                    name="specialRequests"
-                                    value={formData.specialRequests}
-                                    onChange={handleChange}
-                                    rows="4"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#f4ce14] focus:border-transparent"
-                                    placeholder="Any special requests or dietary restrictions..."
-                                ></textarea>
-                            </div>
-
-                            <div className="flex justify-center">
-                                <button
-                                    type="submit"
-                                    className="bg-[#f4ce14] text-black font-semibold py-3 px-8 rounded-md hover:bg-[#e6c200] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#f4ce14] focus:ring-offset-2"
-                                >
-                                    Book Reservation
-                                </button>
-                            </div>
-                        </form>
+        <div className="min-h-screen bg-gray-50" role="main">
+            {/* Hero Section */}
+            <section className="bg-gradient-to-r from-[#495e57] to-[#333] text-white py-16" aria-labelledby="hero-heading">
+                <div className="container mx-auto px-4 text-center">
+                    <h1 id="hero-heading" className="text-4xl md:text-6xl font-bold mb-4">Reserve Your Table</h1>
+                    <p className="text-xl md:text-2xl mb-8 text-[#f4ce14]">
+                        Experience the finest Mediterranean cuisine
+                    </p>
+                    <div className="max-w-2xl mx-auto">
+                        <p className="text-lg text-gray-200">
+                            Join us for an unforgettable dining experience at Little Lemon. 
+                            Our expert chefs craft authentic Mediterranean dishes using the 
+                            freshest ingredients and traditional recipes.
+                        </p>
                     </div>
                 </div>
-            </div>
+            </section>
+
+            {/* Restaurant Info Section */}
+            <section className="py-12 bg-white" aria-labelledby="features-heading">
+                <div className="container mx-auto px-4">
+                    <div className="grid md:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <h2 id="features-heading" className="text-3xl font-bold text-gray-800 mb-6">
+                                Why Choose Little Lemon?
+                            </h2>
+                            <div className="space-y-4" role="list">
+                                <div className="flex items-start space-x-4" role="listitem">
+                                    <div className="flex-shrink-0 w-8 h-8 bg-[#f4ce14] rounded-full flex items-center justify-center" aria-hidden="true">
+                                        <span className="text-black font-bold">✓</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-gray-800">Authentic Mediterranean Cuisine</h3>
+                                        <p className="text-gray-600">Traditional recipes passed down through generations</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-4" role="listitem">
+                                    <div className="flex-shrink-0 w-8 h-8 bg-[#f4ce14] rounded-full flex items-center justify-center" aria-hidden="true">
+                                        <span className="text-black font-bold">✓</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-gray-800">Fresh, Local Ingredients</h3>
+                                        <p className="text-gray-600">We source the finest local and seasonal ingredients</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-4" role="listitem">
+                                    <div className="flex-shrink-0 w-8 h-8 bg-[#f4ce14] rounded-full flex items-center justify-center" aria-hidden="true">
+                                        <span className="text-black font-bold">✓</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-gray-800">Warm, Welcoming Atmosphere</h3>
+                                        <p className="text-gray-600">Perfect for intimate dinners and family celebrations</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-4" role="listitem">
+                                    <div className="flex-shrink-0 w-8 h-8 bg-[#f4ce14] rounded-full flex items-center justify-center" aria-hidden="true">
+                                        <span className="text-black font-bold">✓</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-gray-800">Expert Service</h3>
+                                        <p className="text-gray-600">Our staff ensures every visit is memorable</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="text-center">
+                            <img 
+                                src="../icons/restaurant.jpg" 
+                                alt="Little Lemon Restaurant interior showing warm dining atmosphere" 
+                                className="rounded-lg shadow-lg w-full max-w-md mx-auto"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Booking Form Section */}
+            <section className="py-16 bg-gray-50" aria-labelledby="booking-heading">
+                <div className="container mx-auto px-4">
+                    {/* Error Message */}
+                    {submitError && (
+                        <div className="max-w-2xl mx-auto mb-6" role="alert" aria-live="polite">
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0 w-5 h-5 text-red-400" aria-hidden="true">
+                                        <svg fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                    <div className="ml-3">
+                                        <p className="text-sm text-red-700">{submitError}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Loading State */}
+                    {isSubmitting && (
+                        <div className="max-w-2xl mx-auto mb-6" role="status" aria-live="polite">
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div className="flex items-center">
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3" aria-hidden="true"></div>
+                                    <p className="text-sm text-blue-700">Submitting your reservation...</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div aria-labelledby="booking-heading">
+                        <h2 id="booking-heading" className="sr-only">Make a Reservation</h2>
+                        <BookingForm
+                            onSubmit={handleFormSubmit}
+                            availableTimes={availableTimes}
+                            dispatch={dispatch}
+                            updateTimes={updateTimes}
+                            isSubmitting={isSubmitting}
+                        />
+                    </div>
+                </div>
+            </section>
+
+            {/* Additional Information Section */}
+            <section className="py-12 bg-white" aria-labelledby="info-heading">
+                <div className="container mx-auto px-4">
+                    <h2 id="info-heading" className="sr-only">Additional Information</h2>
+                    <div className="grid md:grid-cols-3 gap-8 text-center">
+                        <div>
+                            <div className="w-16 h-16 bg-[#f4ce14] rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+                                <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-800 mb-2">Opening Hours</h3>
+                            <p className="text-gray-600">
+                                Monday - Friday: 11:00 AM - 10:00 PM<br />
+                                Saturday - Sunday: 10:00 AM - 11:00 PM
+                            </p>
+                        </div>
+                        <div>
+                            <div className="w-16 h-16 bg-[#f4ce14] rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+                                <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-800 mb-2">Contact Us</h3>
+                            <address className="text-gray-600 not-italic">
+                                <p>123 Mediterranean Way</p>
+                                <p>Phone: <a href="tel:+15551234567" className="hover:underline">(555) 123-4567</a></p>
+                                <p>Email: <a href="mailto:info@littlelemon.com" className="hover:underline">info@littlelemon.com</a></p>
+                            </address>
+                        </div>
+                        <div>
+                            <div className="w-16 h-16 bg-[#f4ce14] rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+                                <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-800 mb-2">Location</h3>
+                            <address className="text-gray-600 not-italic">
+                                123 Mediterranean Ave<br />
+                                Chicago, IL 60601
+                            </address>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     );
 };

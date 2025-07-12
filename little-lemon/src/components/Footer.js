@@ -1,8 +1,6 @@
-import React from 'react';
-
 const Footer = () => {
     return (
-        <footer className="bg-gray-800 text-white py-8">
+        <footer className="bg-gray-800 text-white py-8" role="contentinfo">
             <div className="container mx-auto px-4">
                 <div className="grid md:grid-cols-3 gap-8">
                     <div>
@@ -13,11 +11,11 @@ const Footer = () => {
                     </div>
                     <div>
                         <h3 className="text-lg font-semibold mb-4">Contact</h3>
-                        <div className="text-gray-300 space-y-2">
+                        <address className="text-gray-300 space-y-2 not-italic">
                             <p>123 Mediterranean Way</p>
-                            <p>Phone: (555) 123-4567</p>
-                            <p>Email: info@littlelemon.com</p>
-                        </div>
+                            <p>Phone: <a href="tel:+15551234567" className="hover:underline focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded">(555) 123-4567</a></p>
+                            <p>Email: <a href="mailto:info@littlelemon.com" className="hover:underline focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded">info@littlelemon.com</a></p>
+                        </address>
                     </div>
                     <div>
                         <h3 className="text-lg font-semibold mb-4">Hours</h3>

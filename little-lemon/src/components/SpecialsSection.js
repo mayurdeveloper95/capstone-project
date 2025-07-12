@@ -1,10 +1,8 @@
-import React from "react";
-
 const specials = [
   {
     title: "Greek salad",
     price: "$12.99",
-    image: process.env.PUBLIC_URL + "/icons/greek salad.jpg",
+    image: `${process.env.PUBLIC_URL}/icons/greek salad.jpg`,
     description:
       "The famous greek salad of crispy lettuce, peppers, olives and our Chicago style feta cheese, garnished with crunchy garlic and rosemary croutons.",
     orderLink: "#",
@@ -12,7 +10,7 @@ const specials = [
   {
     title: "Bruschetta",
     price: "$ 5.99",
-    image: process.env.PUBLIC_URL + "/icons/bruchetta.svg",
+    image: `${process.env.PUBLIC_URL}/icons/bruchetta.svg`,
     description:
       "Our Bruschetta is made from grilled bread that has been smeared with garlic and seasoned with salt and olive oil.",
     orderLink: "#",
@@ -20,7 +18,7 @@ const specials = [
   {
     title: "Lemon Dessert",
     price: "$ 5.00",
-    image: process.env.PUBLIC_URL + "/icons/lemon dessert.jpg",
+    image: `${process.env.PUBLIC_URL}/icons/lemon dessert.jpg`,
     description:
       "This comes straight from grandma's recipe book, every last ingredient has been sourced and is as authentic as can be imagined.",
     orderLink: "#",
@@ -41,16 +39,17 @@ const SpecialsSection = () => {
             Online Menu
           </button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8" role="list">
           {specials.map((item, idx) => (
             <article
               key={item.title}
               className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col h-full border border-gray-100"
               aria-labelledby={`special-title-${idx}`}
+              role="listitem"
             >
               <img
                 src={item.image}
-                alt={item.title + ' image'}
+                alt={`${item.title} - ${item.description}`}
                 className="w-full h-48 object-cover object-center"
                 loading="lazy"
               />
