@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
+import HomePage from './components/HomePage';
 import BookingPage from './components/BookingPage';
 import Footer from './components/Footer';
 
@@ -10,7 +11,7 @@ function App() {
         <Header />
         <main>
           <Routes>
-            <Route path="/" />
+            <Route path="/" element={<HomePage />}/>
             <Route path="/booking" element={<BookingPage />} />
           </Routes>
         </main>
